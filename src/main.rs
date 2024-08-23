@@ -1,4 +1,4 @@
-use las::Reader;
+use las::{point::Classification, Reader};
 use std::{ffi::OsStr, fs, path::{Path, PathBuf}};
 
 struct Sector {
@@ -63,6 +63,10 @@ fn generate_sector(path: PathBuf) -> Sector {
         }
         if point.y > max_y {
             max_y = point.y;
+        }
+
+        if point.classification == Classification::Water {
+            println!("Found some water");
         }
     }
 
