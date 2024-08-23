@@ -1,5 +1,10 @@
 ## Intent
-This project is a foray into the world of LiDAR and data processing with Rust.  
+This project is a foray into the world of LiDAR and data processing with Rust.
+
+First things first, we need some data! Thankfully, NOAA has us covered with their awesome *Data Access Viewer*  
+This tool allows us to get a dataset of public LiDAR data for any coastal region we are interested in exploring.
+
+Let's check out this cool looking island off the coast of Georgia. ![Screenshot](images/tybee_snip.png)
 
 The standard filetype for storing and distributing LiDAR data are **.laz** files.  
 These are losslessly compressed files containing point cloud data. The uncompressed equivalent is a **.las** file.  
