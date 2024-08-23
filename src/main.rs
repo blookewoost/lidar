@@ -1,5 +1,5 @@
-use las::{point::Classification, Reader};
-use std::{ffi::OsStr, fs, path::{Path, PathBuf}};
+use las::{point::Classification, Point, Reader};
+use std::{ffi::OsStr, fs::{self, read}, path::{Path, PathBuf}};
 
 struct Sector {
     min_x: f64,
@@ -36,41 +36,23 @@ fn generate_grid(dir: &str) -> Grid {
 
 fn generate_sector(path: PathBuf) -> Sector {
 
-    let mut reader = Reader::from_path(path.clone()).unwrap();
+    let reader = Reader::from_path(path.clone()).unwrap();
     println!("Loading dataset: {}...", path.display());
     
-    // Initialize our sector's boundary values.
-    let mut min_x: f64;
-    let mut min_y: f64;
-    let mut max_x: f64;
-    let mut max_y: f64;
+    // Read the boundary values from the header.
+    let header = reader.header().clone();
+    let head = header.into_raw().unwrap();
 
-    // Grab an xy pair from the dataset
-    let (x, y) = (reader.read_point().unwrap().unwrap().x, reader.read_point().unwrap().unwrap().y);
-    (min_x, min_y, max_x, max_y) = (x, y, x, y);
-
-    for wrapped_point in reader.points() {
-        let point = wrapped_point.unwrap();
-        
-        if point.x < min_x {
-            min_x = point.x;
-        }
-        if point.x > max_x {
-            max_x = point.x;
-        }
-        if point.y < min_y {
-            min_y = point.y;
-        }
-        if point.y > max_y {
-            max_y = point.y;
-        }
-
-        if point.classification == Classification::Water {
-            println!("Found some water");
-        }
-    }
+    let min_x: f64 = head.min_x;
+    let min_y: f64 = head.min_y;
+    let max_x: f64 = head.max_x;
+    let max_y: f64 = head.max_y;
 
     Sector { min_x, min_y, max_x, max_y }
+}
+
+fn check_fields(point: Point) {
+
 }
 
 fn main() {
@@ -79,4 +61,5 @@ fn main() {
     for sector in grid.sectors {
         println!("SE: ({}, {}), NW ({},{})", sector.min_x, sector.min_y, sector.max_x, sector.max_y);
     }
+    
 }
