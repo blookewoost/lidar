@@ -1,6 +1,9 @@
+use files::approximate_file_as_plane;
 use las::{point::Classification, Point, Reader};
 use core::f64;
 use std::{default, ffi::OsStr, fs::{self, read}, path::{Path, PathBuf}};
+
+mod files;
 
 #[derive(Default, Debug, Clone, Copy)]
 struct Sector {
@@ -75,5 +78,6 @@ fn main() {
     let grid: Grid = generate_grid("data");
     println!("grid origin (southeast) is ({},{})", grid.global_min_x, grid.global_min_y);
     println!("grid maxima (northwest) is ({},{})", grid.global_max_x, grid.global_max_y); 
+    approximate_file_as_plane("data/Job1057961_32081_24_07.las");
     
 }
