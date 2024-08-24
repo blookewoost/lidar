@@ -1,12 +1,13 @@
-use files::approximate_file_as_plane;
+use files::{approximate_file_as_plane, dist_to_origin};
 use las::{point::Classification, Point, Reader};
 use core::f64;
 use std::{default, ffi::OsStr, fs::{self, read}, path::{Path, PathBuf}};
 
 mod files;
 
-#[derive(Default, Debug, Clone, Copy)]
+#[derive(Default, Debug, Clone)]
 struct Sector {
+    data_file: PathBuf,
     min_x: f64,
     min_y: f64,
     max_x: f64,
@@ -16,22 +17,18 @@ struct Sector {
 #[derive(Default, Debug, Clone)]
 struct Grid {
     sectors: Vec<Sector>,
-    global_min_x: f64,
-    global_min_y: f64,
-    global_max_x: f64,
-    global_max_y: f64,
+    origin_x: f64,
+    origin_y: f64,
 }
 
 impl Grid {
     pub fn new(sectors: Vec<Sector>) -> Grid {
         
         // Yuck! Generate iterators over the sectors and collapse them to the global min/max
-        let global_max_x = sectors.iter().map(|s| s.max_x).fold(f64::NEG_INFINITY, |a, s| a.max(s));
-        let global_max_y = sectors.iter().map(|s| s.max_y).fold(f64::NEG_INFINITY, |a, s| a.max(s));
-        let global_min_x = sectors.iter().map(|s| s.min_x).fold(f64::INFINITY, |a, s| a.min(s));
-        let global_min_y: f64 = sectors.iter().map(|s| s.min_y).fold(f64::INFINITY, |a, s| a.min(s));
+        let origin_x = sectors.iter().map(|s| s.max_x).fold(f64::NEG_INFINITY, |a, s| a.max(s));
+        let origin_y = sectors.iter().map(|s| s.max_y).fold(f64::NEG_INFINITY, |a, s| a.max(s));
 
-        Grid { sectors, global_min_x, global_min_y, global_max_x, global_max_y }
+        Grid { sectors, origin_x, origin_y }
     }
 }
 
@@ -70,14 +67,13 @@ fn generate_sector(path: PathBuf) -> Sector {
     let max_x: f64 = head.max_x;
     let max_y: f64 = head.max_y;
 
-    Sector { min_x, min_y, max_x, max_y }
+    Sector { data_file: path, min_x, min_y, max_x, max_y }
 }
 
 fn main() {
     
     let grid: Grid = generate_grid("data");
-    println!("grid origin (southeast) is ({},{})", grid.global_min_x, grid.global_min_y);
-    println!("grid maxima (northwest) is ({},{})", grid.global_max_x, grid.global_max_y); 
-    approximate_file_as_plane("data/Job1057961_32081_24_07.las");
+    println!("grid origin (southeast) is ({},{})", grid.origin_x, grid.origin_y);
+    dist_to_origin(grid);
     
 }
