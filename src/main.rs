@@ -81,7 +81,8 @@ fn main() {
     // dist_to_origin(grid);
 
     let mut drone = Drone::new(1000, 1000);
-    bevy_test();
+    println!("look here! {},{}", grid.sectors[0].min_x, grid.sectors[0].min_y);
+    bevy_test(grid.sectors[0].clone());
     //main_loop(&mut drone);
     
 }
