@@ -1,11 +1,13 @@
-use drone::{main_loop, Drone};
-use files::dist_to_origin;
 use las::Reader;
+use renderer::bevy_test;
 use core::f64;
 use std::fs;
 use std::{ffi::OsStr, path::{Path, PathBuf}};
+
 mod files;
 mod drone;
+use drone::{main_loop, Drone};
+mod renderer;
 
 #[derive(Debug, Clone)]
 struct Sector {
@@ -79,6 +81,7 @@ fn main() {
     // dist_to_origin(grid);
 
     let mut drone = Drone::new(1000, 1000);
-    main_loop(&mut drone);
+    bevy_test();
+    //main_loop(&mut drone);
     
 }
