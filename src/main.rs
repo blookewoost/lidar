@@ -1,11 +1,13 @@
-use files::{approximate_file_as_plane, dist_to_origin};
-use las::{point::Classification, Point, Reader};
+use drone::{main_loop, Drone};
+use files::dist_to_origin;
+use las::Reader;
 use core::f64;
-use std::{default, ffi::OsStr, fs::{self, read}, path::{Path, PathBuf}};
-
+use std::fs;
+use std::{ffi::OsStr, path::{Path, PathBuf}};
 mod files;
+mod drone;
 
-#[derive(Default, Debug, Clone)]
+#[derive(Debug, Clone)]
 struct Sector {
     data_file: PathBuf,
     min_x: f64,
@@ -74,6 +76,9 @@ fn main() {
     
     let grid: Grid = generate_grid("data");
     println!("grid origin (southeast) is ({},{})", grid.origin_x, grid.origin_y);
-    dist_to_origin(grid);
+    // dist_to_origin(grid);
+
+    let mut drone = Drone::new(1000, 1000);
+    main_loop(&mut drone);
     
 }
