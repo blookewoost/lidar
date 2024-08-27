@@ -5,11 +5,9 @@ use std::fs;
 use std::{ffi::OsStr, path::{Path, PathBuf}};
 
 mod files;
-mod drone;
-use drone::{main_loop, Drone};
 mod renderer;
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 struct Sector {
     data_file: PathBuf,
     min_x: f64,
@@ -21,18 +19,26 @@ struct Sector {
 #[derive(Default, Debug, Clone)]
 struct Grid {
     sectors: Vec<Sector>,
+    origin_idx: usize,
     origin_x: f64,
     origin_y: f64,
 }
 
 impl Grid {
     pub fn new(sectors: Vec<Sector>) -> Grid {
-        
-        // Yuck! Generate iterators over the sectors and collapse them to the global min/max
-        let origin_x = sectors.iter().map(|s| s.max_x).fold(f64::NEG_INFINITY, |a, s| a.max(s));
-        let origin_y = sectors.iter().map(|s| s.max_y).fold(f64::NEG_INFINITY, |a, s| a.max(s));
 
-        Grid { sectors, origin_x, origin_y }
+        let mut origin_x = f64::INFINITY;
+        let mut origin_idx: usize = 0;
+
+        for idx in 0..sectors.len() {
+            if sectors[idx].min_x < origin_x {
+                origin_x = sectors[idx].min_x;
+                origin_idx = idx;
+            }
+        }
+
+        let origin_y = sectors[origin_idx].min_y;
+        Grid { sectors, origin_idx, origin_x, origin_y }
     }
 }
 
@@ -77,12 +83,9 @@ fn generate_sector(path: PathBuf) -> Sector {
 fn main() {
     
     let grid: Grid = generate_grid("data");
-    println!("grid origin (southeast) is ({},{})", grid.origin_x, grid.origin_y);
-    // dist_to_origin(grid);
-
-    let mut drone = Drone::new(1000, 1000);
-    println!("look here! {},{}", grid.sectors[0].min_x, grid.sectors[0].min_y);
-    bevy_test(grid.sectors[0].clone());
+    let origin = grid.origin_idx;
+    bevy_test(&grid.sectors[origin], grid.origin_x, grid.origin_y);
+    //bevy_test();
     //main_loop(&mut drone);
     
 }
