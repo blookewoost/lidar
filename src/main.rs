@@ -1,5 +1,5 @@
 use las::Reader;
-use renderer::bevy_test;
+use renderer::game_loop;
 use core::f64;
 use std::fs;
 use std::{ffi::OsStr, path::{Path, PathBuf}};
@@ -82,9 +82,9 @@ fn generate_sector(path: PathBuf) -> Sector {
 
 fn main() {
     
-    let grid: Grid = generate_grid("data");
-    let origin = grid.origin_idx;
-    bevy_test(&grid.sectors[origin], grid.origin_x, grid.origin_y);
+    // let grid: Grid = generate_grid("data");
+    // let origin = grid.origin_idx;
+    game_loop();
     //bevy_test();
     //main_loop(&mut drone);
     
