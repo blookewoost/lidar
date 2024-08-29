@@ -1,91 +1,74 @@
-use las::Reader;
-use renderer::game_loop;
-use core::f64;
-use std::fs;
-use std::{ffi::OsStr, path::{Path, PathBuf}};
+use bevy::prelude::*;
+use std::time::Instant;
+mod resources;
 
-mod files;
-mod renderer;
-
-#[derive(Default, Debug, Clone)]
-struct Sector {
-    data_file: PathBuf,
-    min_x: f64,
-    min_y: f64,
-    max_x: f64,
-    max_y: f64,
-}
-
-#[derive(Default, Debug, Clone)]
-struct Grid {
-    sectors: Vec<Sector>,
-    origin_idx: usize,
-    origin_x: f64,
-    origin_y: f64,
-}
-
-impl Grid {
-    pub fn new(sectors: Vec<Sector>) -> Grid {
-
-        let mut origin_x = f64::INFINITY;
-        let mut origin_idx: usize = 0;
-
-        for idx in 0..sectors.len() {
-            if sectors[idx].min_x < origin_x {
-                origin_x = sectors[idx].min_x;
-                origin_idx = idx;
-            }
-        }
-
-        let origin_y = sectors[origin_idx].min_y;
-        Grid { sectors, origin_idx, origin_x, origin_y }
-    }
-}
-
-
-fn generate_grid(dir: &str) -> Grid {
-
-    let path = Path::new(dir);
-    let extension: &OsStr = OsStr::new("las");
-    let mut sectors: Vec<Sector> = vec![];
-
-    if path.is_dir() {
-        println!("Loading dataset from {}", path.display());
-        for file in fs::read_dir(path).unwrap() {
-            let file = file.unwrap();
-            let path = file.path();
-
-            if path.is_file() && path.extension() == Some(extension) {
-                let sector = generate_sector(path);
-                sectors.push(sector);
-            }
-        }
-    }   
-    return Grid::new(sectors);
-}
-
-fn generate_sector(path: PathBuf) -> Sector {
-
-    let reader = Reader::from_path(path.clone()).unwrap();
-    
-    // Read the boundary values from the header.
-    let header = reader.header().clone();
-    let head = header.into_raw().unwrap();
-
-    let min_x: f64 = head.min_x;
-    let min_y: f64 = head.min_y;
-    let max_x: f64 = head.max_x;
-    let max_y: f64 = head.max_y;
-
-    Sector { data_file: path, min_x, min_y, max_x, max_y }
-}
+use resources::World;
 
 fn main() {
-    
-    // let grid: Grid = generate_grid("data");
-    // let origin = grid.origin_idx;
-    game_loop();
-    //bevy_test();
-    //main_loop(&mut drone);
-    
+    let world = World::new("data");
+
+    App::new()
+        .add_plugins(DefaultPlugins)
+        .insert_resource(world)
+        .add_systems(Startup, setup)
+        .add_systems(Update, player_movement)
+        .run();
+}
+
+#[derive(Component)]
+struct Player;
+
+fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, world: Res<World>) {
+
+    println!("Loading meshes...");
+    let now = Instant::now();
+    for idx in 0..world.meshes.len() {
+        // Load the mesh.
+        commands.spawn(PbrBundle {
+            mesh: meshes.add(world.meshes[idx].mesh.clone()),
+            ..Default::default()
+        });
+    }
+
+    println!("Loaded meshes in {:.2?} seconds.", now.elapsed());
+
+    commands.spawn(TransformBundle::from_transform(Transform::from_xyz(world.origin_x, world.origin_y, 1500.0)))
+    .insert(Player)
+    .with_children(|player| {
+        player.spawn( Camera3dBundle{
+            transform: Transform::from_xyz(0.0, 0.0, 0.0)
+            .looking_at(Vec3::ZERO, Vec3::Y),
+            ..Default::default()
+        });
+    });
+}
+
+fn player_movement(keys: Res<ButtonInput<KeyCode>>, time: Res<Time>, mut query: Query<&mut Transform, With<Player>>) {
+    for mut transform in query.iter_mut() {
+        let mut direction = Vec3::ZERO;
+
+        if keys.pressed(KeyCode::KeyW) {
+            direction.y += 10.0;
+        }
+        if keys.pressed(KeyCode::KeyD) {
+            direction.x += 10.0;
+        }
+        if keys.pressed(KeyCode::KeyS) {
+            direction.y -= 10.0;
+        }
+        if keys.pressed(KeyCode::KeyA) {
+            direction.x -= 10.0;
+        }
+        if keys.pressed(KeyCode::ArrowUp) {
+            direction.z += 5.0;
+        }
+        if keys.pressed(KeyCode::ArrowDown) {
+            direction.z -= 5.0;
+        }
+
+        if direction.length() > 0.0 {
+            direction = direction.normalize();
+            transform.translation += direction * time.delta_seconds() * 200.0;
+        }
+    }
 }
