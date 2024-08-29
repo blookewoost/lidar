@@ -5,7 +5,5 @@ edition = "2021"
 
 [dependencies]
 las = "0.9"
-kd-tree = "0.6.0"
 bevy = "0.14.1"
-rayon = "1.10.0"
 
